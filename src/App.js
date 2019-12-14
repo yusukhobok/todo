@@ -17,14 +17,36 @@ class App extends React.Component {
       loading: true,
       showCompleted: true,
       refreshInterval: 2000,
+      isPause: true,
       todos: []
     };
   }
 
   componentDidMount() {
     this.onReadTodos();
-    setInterval(this.onReadTodos, this.state.refreshInterval)
+    // setInterval(() => {
+    //   if (!this.state.isPause)
+    //     this.onReadTodos();
+    // }, this.state.refreshInterval);
   }
+
+  pause = () => {
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        isPause: true
+      };
+    });
+  };
+
+  resume = () => {
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        isPause: false
+      };
+    });
+  };
 
   onReadTodos = () => {
     axios.get("https://boiling-woodland-05459.herokuapp.com/api/").then(res => {
@@ -50,22 +72,24 @@ class App extends React.Component {
       title: todo.title,
       isCompleted: !todo.isCompleted
     };
+
     this.setState(prevState => {
       return {
         ...prevState,
         todos: prevState.todos.map(item => {
-          if (item.id === newTodo.id)
-            return newTodo
-          else
-            return item
+          if (item.id === newTodo.id) return newTodo;
+          else return item;
         })
-      }
-    })
+      };
+    });
+
+    this.pause();
     axios
       .put(
         `https://boiling-woodland-05459.herokuapp.com/api/${newTodo.id}`,
         newTodo
       )
+      .then(this.resume);
   };
 
   onDelete = todo => {
@@ -73,10 +97,14 @@ class App extends React.Component {
       return {
         ...prevState,
         todos: prevState.todos.filter(item => item.id !== todo.id)
-      }
-    })    
-    axios.delete(`https://boiling-woodland-05459.herokuapp.com/api/${todo.id}`)
-  }
+      };
+    });
+
+    this.pause();
+    axios
+      .delete(`https://boiling-woodland-05459.herokuapp.com/api/${todo.id}`)
+      .then(this.resume);
+  };
 
   onChangeShowCompleted = () => {
     this.setState(prevState => {
@@ -92,15 +120,19 @@ class App extends React.Component {
       title: newTitle,
       isCompleted: false
     };
-    let newTodos = this.state.todos.slice()
-    newTodos.push(newTodo)
+    let newTodos = this.state.todos.slice();
+    newTodos.push(newTodo);
     this.setState(prevState => {
       return {
         ...prevState,
         todos: newTodos
-      }
-    })  
-    axios.post("https://boiling-woodland-05459.herokuapp.com/api/", newTodo)
+      };
+    });
+
+    this.pause();
+    axios
+      .post("https://boiling-woodland-05459.herokuapp.com/api/", newTodo)
+      .then(this.resume);
   };
 
   render() {

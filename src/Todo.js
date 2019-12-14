@@ -12,18 +12,22 @@ class Todo extends React.Component {
       this.props.onChangeTodoCompleted(this.props.todo)
   }
 
+  handleFocus = (e) => {
+    // console.log("Focus");
+  }
+
   handleTodoDelete = (e) => {
     this.props.onDelete(this.props.todo)
   }
 
   render() {
     let btnVariant;
-    if (this.props.todo.isCompleted) btnVariant = "outline-secondary";
-    else btnVariant = "outline-primary";
+    if (this.props.todo.isCompleted) btnVariant = "secondary"
+    else btnVariant = "primary";
 
     return (
       <ListGroup.Item style={{ display: "flex" }}>
-        <Button variant={btnVariant} style={{ width: "100%" }} onClick={this.handleTodoClick}>
+        <Button variant={btnVariant} style={{ width: "100%" }} onClick={this.handleTodoClick} onFocus={this.handleFocus}>
           {this.props.todo.title}
         </Button>
         {/* <Form.Control type="text" placeholder="Изменить..." defaultValue={this.props.todo.title}/> */}
