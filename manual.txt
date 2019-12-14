@@ -1,0 +1,11 @@
+Исходная настройка: https://github.com/gitname/react-gh-pages
+
+Возможные ошибки:
+https://github.com/Microsoft/Git-Credential-Manager-for-Windows
+https://github.com/transitive-bullshit/react-modern-library-boilerplate/issues/15
+
+Деплой выполняется командой:
+npm run deploy
+
+Сайт доступен по адресу:
+https://yus27.github.io/todo/
