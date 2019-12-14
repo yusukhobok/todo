@@ -14,6 +14,7 @@ class App extends React.Component {
   constructor() {
     super();
     this.state = {
+      loading: true,
       showCompleted: true,
       refreshInterval: 2000,
       todos: []
@@ -36,7 +37,8 @@ class App extends React.Component {
       this.setState(prevState => {
         return {
           ...prevState,
-          todos: todos
+          todos: todos,
+          loading: false
         };
       });
     });
@@ -103,7 +105,7 @@ class App extends React.Component {
 
   render() {
     let todoList;
-    if (this.state.todos.length === 0) {
+    if (this.state.todos.loading) {
       todoList = <p>Загрузка...</p>;
     } else {
       todoList = (
