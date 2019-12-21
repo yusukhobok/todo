@@ -20,7 +20,7 @@ class App extends React.Component {
       loading: true,
       isError: false,
       errorMessage: "",
-      showCompleted: true,
+      showCompleted: false,
       todos: []
     };
   }
