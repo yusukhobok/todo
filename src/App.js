@@ -10,173 +10,252 @@ import Todo from "./Todo";
 import AddTodo from "./AddTodo";
 import TodoSettings from "./TodoSettings";
 
+const API_URL = "https://boiling-woodland-05459.herokuapp.com/api/";
+
+
 class App extends React.Component {
   constructor() {
     super();
     this.state = {
       loading: true,
+      isError: false,
+      errorMessage: "",
       showCompleted: true,
-      refreshInterval: 2000,
-      isPause: true,
       todos: []
     };
   }
 
+
   componentDidMount() {
-    this.onReadTodos();
-    // setInterval(() => {
-    //   if (!this.state.isPause)
-    //     this.onReadTodos();
-    // }, this.state.refreshInterval);
+    this.refreshTodos();
   }
 
-  pause = () => {
+
+  sortTodos = todos => {
+    todos.sort((a, b) => (a.order > b.order ? 1 : -1));
+  }
+
+
+  removeOldTodos = todosFromAPI => {
+    const filteredTodos = this.state.todos.filter(item => {
+      const id = item.id;
+      const index = todosFromAPI.findIndex(item => item.id === id);
+      return index !== -1;
+    })
     this.setState(prevState => {
       return {
         ...prevState,
-        isPause: true
-      };
-    });
-  };
+        todos: filteredTodos
+      }
+    })
+  }
 
-  resume = () => {
+
+  addNewTodos = todosFromAPI => {
+    const filteredTodosFromAPI = todosFromAPI.filter(item => {
+      const id = item.id;
+      const index = this.state.todos.findIndex(item => item.id === id);
+      return index === -1;
+    })
     this.setState(prevState => {
       return {
         ...prevState,
-        isPause: false
-      };
-    });
-  };
+        todos: prevState.todos.concat(filteredTodosFromAPI)
+      }
+    })
+  }
 
-  onReadTodos = () => {
-    axios.get("https://boiling-woodland-05459.herokuapp.com/api/").then(res => {
-      let todos = res.data.slice();
-      let sortById = todos => {
-        todos.sort((a, b) => (a.id > b.id ? 1 : -1));
+
+  getTodosFromAPI = async () => {
+    try {
+      const responce = await axios.get(API_URL);
+      const todosFromAPI = responce.data.slice();
+      return todosFromAPI;
+    } catch (error) {
+      throw new Error("Ошибка доступа к данным");
+    }
+  }
+
+
+  updateTodosToAPI = async () => {
+    if (this.state.todos.length === 0)
+      return
+    try {
+      await axios.put(API_URL, this.state.todos);
+    } catch (error) {
+      throw new Error("Ошибка обновления данных");
+    }
+  }
+
+
+  refreshTodos = async () => {
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        loading: true
+      }
+    })
+
+    try {
+      const todosFromAPI = await this.getTodosFromAPI();
+      this.removeOldTodos(todosFromAPI);
+      try {
+        await this.updateTodosToAPI();
+        this.addNewTodos(todosFromAPI);
+        this.setState(prevState => {
+          return {
+            ...prevState,
+            loading: false,
+            isError: false,
+            errorMessage: "",
+          }
+        });
+      } catch (error) {
+        console.log(error.message);
+        this.setState(prevState => {
+          return {
+            ...prevState,
+            loading: false,
+            isError: false,
+            errorMessage: "",
+            todos: todosFromAPI,
+          }
+        });
+      }
+    } catch (error) {
+        this.setState(prevState => {
+          return {
+            ...prevState,
+            loading: false,
+            isError: true,
+            errorMessage: error.message,
+            todos: [],
+          }
+        });
+      }
+    };
+
+
+    onChangeTodoCompleted = todo => {
+      const newTodo = {
+        id: todo.id,
+        title: todo.title,
+        isCompleted: !todo.isCompleted
       };
-      sortById(todos);
 
       this.setState(prevState => {
         return {
           ...prevState,
-          todos: todos,
-          loading: false
+          todos: prevState.todos.map(item => {
+            if (item.id === newTodo.id) return newTodo;
+            else return item;
+          })
         };
       });
-    });
-  };
-
-  onChangeTodoCompleted = todo => {
-    const newTodo = {
-      id: todo.id,
-      title: todo.title,
-      isCompleted: !todo.isCompleted
     };
 
-    this.setState(prevState => {
-      return {
-        ...prevState,
-        todos: prevState.todos.map(item => {
-          if (item.id === newTodo.id) return newTodo;
-          else return item;
-        })
-      };
-    });
-
-    this.pause();
-    axios
-      .put(
-        `https://boiling-woodland-05459.herokuapp.com/api/${newTodo.id}`,
-        newTodo
-      )
-      .then(this.resume);
-  };
-
-  onDelete = todo => {
-    this.setState(prevState => {
-      return {
-        ...prevState,
-        todos: prevState.todos.filter(item => item.id !== todo.id)
-      };
-    });
-
-    this.pause();
-    axios
-      .delete(`https://boiling-woodland-05459.herokuapp.com/api/${todo.id}`)
-      .then(this.resume);
-  };
-
-  onChangeShowCompleted = () => {
-    this.setState(prevState => {
-      return {
-        ...prevState,
-        showCompleted: !prevState.showCompleted
-      };
-    });
-  };
-
-  onAddTodo = newTitle => {
-    const newTodo = {
-      title: newTitle,
-      isCompleted: false
+    onDelete = async (todo) => {
+      this.setState((prevState) => {
+        return {...prevState, loading: true}
+      })
+      try {
+        await axios.delete(API_URL + todo.id);
+        this.setState(prevState => {
+          return {
+            ...prevState,
+            loading: false,
+            todos: prevState.todos.filter(item => item.id !== todo.id)
+          };
+        });
+      }
+      catch (error) {
+        console.log(error.message);
+      }
     };
-    let newTodos = this.state.todos.slice();
-    newTodos.push(newTodo);
-    this.setState(prevState => {
-      return {
-        ...prevState,
-        todos: newTodos
+
+    onChangeShowCompleted = () => {
+      this.setState(prevState => {
+        return {
+          ...prevState,
+          showCompleted: !prevState.showCompleted
+        };
+      });
+    };
+
+    onAddTodo = async (newTitle) => {
+      const newTodo = {
+        title: newTitle,
+        isCompleted: false
       };
-    });
 
-    this.pause();
-    axios
-      .post("https://boiling-woodland-05459.herokuapp.com/api/", newTodo)
-      .then(this.resume);
-  };
+      this.setState((prevState) => {
+        return {...prevState, loading: true}
+      })
 
-  render() {
-    let todoList;
-    if (this.state.todos.loading) {
-      todoList = <p>Загрузка...</p>;
-    } else {
-      todoList = (
-        <>
-          {this.state.todos.map(item => {
-            if (!this.state.showCompleted && item.isCompleted) return;
-            else
-              return (
-                <Todo
-                  key={item.id}
-                  todo={item}
-                  showCompleted={this.state.showCompleted}
-                  onChangeTodoCompleted={this.onChangeTodoCompleted}
-                  onDelete={this.onDelete}
-                />
-              );
-          })}
+      try {
+        const res = await axios.post(API_URL, newTodo);
+        const newTodoFromAPI = res.data;
+        console.log(newTodoFromAPI)
 
-          <ListGroup.Item>
-            <AddTodo onAddTodo={this.onAddTodo} />
-          </ListGroup.Item>
+        let newTodos = this.state.todos.slice();
+        newTodos.push(newTodoFromAPI);
+        this.setState(prevState => {
+          return {
+            ...prevState,
+            todos: newTodos,
+            loading: false
+          };
+        });
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
 
-          <ListGroup.Item>
-            <TodoSettings
-              showCompleted={this.state.showCompleted}
-              onChangeShowCompleted={this.onChangeShowCompleted}
-              onRefresh={this.onReadTodos}
-            />
-          </ListGroup.Item>
-        </>
+    render() {
+      let todoList;
+      if (this.state.isError) {
+        todoList = <p>{this.state.errorMessage}</p>;
+      }
+      else if (this.state.loading) {
+        todoList = <p>Загрузка...</p>;
+      } else {
+        todoList = (
+          <>
+            {this.state.todos.map(item => {
+              if (!this.state.showCompleted && item.isCompleted) return;
+              else
+                return (
+                  <Todo
+                    key={item.id}
+                    todo={item}
+                    showCompleted={this.state.showCompleted}
+                    onChangeTodoCompleted={this.onChangeTodoCompleted}
+                    onDelete={this.onDelete}
+                  />
+                );
+            })}
+
+            <ListGroup.Item>
+              <AddTodo onAddTodo={this.onAddTodo} />
+            </ListGroup.Item>
+
+            <ListGroup.Item>
+              <TodoSettings
+                showCompleted={this.state.showCompleted}
+                onChangeShowCompleted={this.onChangeShowCompleted}
+                onRefresh={this.refreshTodos}
+              />
+            </ListGroup.Item>
+          </>
+        );
+      }
+
+      return (
+        <div className="App">
+          <header className="App-header">{todoList}</header>
+        </div>
       );
     }
-
-    return (
-      <div className="App">
-        <header className="App-header">{todoList}</header>
-      </div>
-    );
   }
-}
 
-export default App;
+  export default App;

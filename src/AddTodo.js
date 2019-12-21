@@ -11,7 +11,7 @@ class AddTodo extends React.Component {
   onChange = event => {
     this.setState({ value: event.target.value });
   };
-
+  
   onFormSubmit = event => {
       event.preventDefault();
       if (this.state.value !== "") {

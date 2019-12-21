@@ -11,7 +11,7 @@ class Todo extends React.Component {
   handleTodoClick = (e) => {
       this.props.onChangeTodoCompleted(this.props.todo)
   }
-
+  
   handleFocus = (e) => {
     // console.log("Focus");
   }
