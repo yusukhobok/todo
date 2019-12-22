@@ -9,6 +9,7 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Todo from "./Todo";
 import AddTodo from "./AddTodo";
 import TodoSettings from "./TodoSettings";
+import TodoMessage from "./TodoMessage";
 
 const API_URL = "https://boiling-woodland-05459.herokuapp.com/api/";
 
@@ -214,10 +215,10 @@ class App extends React.Component {
     render() {
       let todoList;
       if (this.state.isError) {
-        todoList = <p>{this.state.errorMessage}</p>;
+        todoList = <TodoMessage msg={this.state.errorMessage} variant="danger" />
       }
       else if (this.state.loading) {
-        todoList = <p>Загрузка...</p>;
+        todoList = <TodoMessage msg="Загрузка..." variant="info" />
       } else {
         todoList = (
           <>

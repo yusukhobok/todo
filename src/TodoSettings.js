@@ -1,32 +1,28 @@
 import React from "react";
 
-import Form from "react-bootstrap/Form";
-import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { Icon } from "react-icons-kit";
 import { refresh } from "react-icons-kit/fa/refresh";
 
-class TodoSettings extends React.Component {
-  handleRefresh = event => {
-    this.props.onRefresh();
-  };
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
+class TodoSettings extends React.Component {
   render() {
+    let btnVariant;
+    if (this.props.showCompleted) btnVariant = "outline-primary"
+    else btnVariant = "outline-secondary";
+
     return (
       <div style={{ display: "flex" }}>
-        <Container>
-        <Form>
-          <Form.Check
-            type="checkbox"
-            label="Показывать выполненные"
-            checked={this.props.showCompleted}
-            onChange={this.props.onChangeShowCompleted}
-          />
-        </Form>
-        </Container>
-        <Button style={{ marginLeft: "10px" }} onClick={this.handleRefresh}>
+        <Button
+          variant={btnVariant}
+          style={{ width: "100%" }}
+          onClick={this.props.onChangeShowCompleted}>
+          Показывать выполненные
+        </Button>
+        <Button style={{ marginLeft: "10px" }} onClick={this.props.onRefresh}>
           <Icon icon={refresh} />
-        </Button>          
+        </Button>
       </div>
     );
   }
