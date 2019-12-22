@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SortableContainer, SortableElement } from 'react-sortable-hoc';
+import { SortableContainer, SortableElement, sortableHandle } from 'react-sortable-hoc';
 
 import Todo from "./Todo";
 
@@ -43,8 +43,12 @@ class TodoList extends React.Component {
             return (this.props.showCompleted || !item.isCompleted)
         })
 
+        const DragHandle = sortableHandle(() => <span>::</span>);
+
         const SortableItem = SortableElement(({ value }) =>
-            <>
+            // <div style={{ display: "flex" }}>
+            <div>
+                {/* <DragHandle /> */}
             <Todo
                 key={value.id}
                 todo={value}
@@ -52,9 +56,9 @@ class TodoList extends React.Component {
                 onChangeTodoCompleted={this.props.onChangeTodoCompleted}
                 onDelete={this.props.onDelete}
             />
-            </>
-
+            </div>
         );
+
 
         const SortableList = SortableContainer(({ items }) => {
             return (
