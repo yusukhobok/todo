@@ -44,6 +44,7 @@ class TodoList extends React.Component {
         })
 
         const SortableItem = SortableElement(({ value }) =>
+            <>
             <Todo
                 key={value.id}
                 todo={value}
@@ -51,6 +52,7 @@ class TodoList extends React.Component {
                 onChangeTodoCompleted={this.props.onChangeTodoCompleted}
                 onDelete={this.props.onDelete}
             />
+            </>
 
         );
 
@@ -63,6 +65,8 @@ class TodoList extends React.Component {
                 </div>
             )
         });
+
+
 
         return (
             <SortableList items={this.visibleTodos} onSortEnd={this.onSortEnd} />
