@@ -6,10 +6,10 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 import ListGroup from "react-bootstrap/ListGroup";
 
-import Todo from "./Todo";
 import AddTodo from "./AddTodo";
 import TodoSettings from "./TodoSettings";
 import TodoMessage from "./TodoMessage";
+import TodoList from "./TodoList";
 
 const API_URL = "https://boiling-woodland-05459.herokuapp.com/api/";
 
@@ -32,9 +32,6 @@ class App extends React.Component {
   }
 
 
-  sortTodos = todos => {
-    todos.sort((a, b) => (a.order > b.order ? 1 : -1));
-  }
 
 
   removeOldTodos = todosFromAPI => {
@@ -124,139 +121,158 @@ class App extends React.Component {
         });
       }
     } catch (error) {
-        this.setState(prevState => {
-          return {
-            ...prevState,
-            loading: false,
-            isError: true,
-            errorMessage: error.message,
-            todos: [],
-          }
-        });
-      }
-    };
-
-
-    onChangeTodoCompleted = todo => {
-      const newTodo = {
-        id: todo.id,
-        title: todo.title,
-        isCompleted: !todo.isCompleted
-      };
-
       this.setState(prevState => {
         return {
           ...prevState,
-          todos: prevState.todos.map(item => {
-            if (item.id === newTodo.id) return newTodo;
-            else return item;
-          })
-        };
+          loading: false,
+          isError: true,
+          errorMessage: error.message,
+          todos: [],
+        }
       });
-    };
-
-    onDelete = async (todo) => {
-      this.setState((prevState) => {
-        return {...prevState, loading: true}
-      })
-      try {
-        await axios.delete(API_URL + todo.id);
-        this.setState(prevState => {
-          return {
-            ...prevState,
-            loading: false,
-            todos: prevState.todos.filter(item => item.id !== todo.id)
-          };
-        });
-      }
-      catch (error) {
-        console.log(error.message);
-      }
-    };
-
-    onChangeShowCompleted = () => {
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          showCompleted: !prevState.showCompleted
-        };
-      });
-    };
-
-    onAddTodo = async (newTitle) => {
-      const newTodo = {
-        title: newTitle,
-        isCompleted: false
-      };
-
-      this.setState((prevState) => {
-        return {...prevState, loading: true}
-      })
-
-      try {
-        const res = await axios.post(API_URL, newTodo);
-        const newTodoFromAPI = res.data;
-        console.log(newTodoFromAPI)
-
-        let newTodos = this.state.todos.slice();
-        newTodos.push(newTodoFromAPI);
-        this.setState(prevState => {
-          return {
-            ...prevState,
-            todos: newTodos,
-            loading: false
-          };
-        });
-      } catch (error) {
-        console.log(error.message);
-      }
-    };
-
-    render() {
-      let todoList;
-      if (this.state.isError) {
-        todoList = <TodoMessage msg={this.state.errorMessage} variant="danger" />
-      }
-      else if (this.state.loading) {
-        todoList = <TodoMessage msg="Загрузка..." variant="info" />
-      } else {
-        todoList = (
-          <>
-            {this.state.todos.map(item => {
-              if (!this.state.showCompleted && item.isCompleted) return;
-              else
-                return (
-                  <Todo
-                    key={item.id}
-                    todo={item}
-                    showCompleted={this.state.showCompleted}
-                    onChangeTodoCompleted={this.onChangeTodoCompleted}
-                    onDelete={this.onDelete}
-                  />
-                );
-            })}
-
-            <ListGroup.Item>
-              <AddTodo onAddTodo={this.onAddTodo} />
-            </ListGroup.Item>
-
-            <ListGroup.Item>
-              <TodoSettings
-                showCompleted={this.state.showCompleted}
-                onChangeShowCompleted={this.onChangeShowCompleted}
-                onRefresh={this.refreshTodos}
-              />
-            </ListGroup.Item>
-          </>
-        );
-      }
-
-      return (
-        <div className="App">
-          <header className="App-header">{todoList}</header>
-        </div>
-      );
     }
+  };
+
+
+  onChangeTodoCompleted = todo => {
+    const newTodo = {
+      id: todo.id,
+      title: todo.title,
+      isCompleted: !todo.isCompleted
+    };
+
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        todos: prevState.todos.map(item => {
+          if (item.id === newTodo.id) return newTodo;
+          else return item;
+        })
+      };
+    });
+  };
+
+  onDelete = async (todo) => {
+    this.setState((prevState) => {
+      return { ...prevState, loading: true }
+    })
+    try {
+      await axios.delete(API_URL + todo.id);
+      this.setState(prevState => {
+        return {
+          ...prevState,
+          loading: false,
+          todos: prevState.todos.filter(item => item.id !== todo.id)
+        };
+      });
+    }
+    catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  onChangeShowCompleted = () => {
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        showCompleted: !prevState.showCompleted
+      };
+    });
+  };
+
+  onAddTodo = async (newTitle) => {
+    const orders = this.state.todos.map(item => item.order)
+    const maxOrder = Math.max(...orders);
+
+    const newTodo = {
+      title: newTitle,
+      isCompleted: false,
+      order: maxOrder + 1
+    };
+
+    this.setState((prevState) => {
+      return { ...prevState, loading: true }
+    })
+
+    try {
+      const res = await axios.post(API_URL, newTodo);
+      const newTodoFromAPI = res.data;
+
+      let newTodos = this.state.todos.slice();
+      newTodos.push(newTodoFromAPI);
+      this.setState(prevState => {
+        return {
+          ...prevState,
+          todos: newTodos,
+          loading: false
+        };
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
+  changeTodos = (id1, id2) => {
+
+    const ind1 = this.state.todos.findIndex(item => item.id == id1);
+    const order1 = this.state.todos[ind1].order;
+
+    const ind2 = this.state.todos.findIndex(item => item.id == id2);
+    const order2 = this.state.todos[ind2].order;
+
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        todos: prevState.todos.map(item => {
+          if (item.id === id1) 
+            return {...item, order: order2};
+          else if (item.id == id2)
+            return {...item, order: order1};
+          else 
+            return item;
+        })
+      };
+    })
   }
 
-  export default App;
+  render() {
+    let todoList;
+    if (this.state.isError) {
+      todoList = <TodoMessage msg={this.state.errorMessage} variant="danger" />
+    }
+    else if (this.state.loading) {
+      todoList = <TodoMessage msg="Загрузка..." variant="info" />
+    } else {
+      todoList = (
+        <>
+          <TodoList
+            todos={this.state.todos}
+            showCompleted={this.state.showCompleted}
+            onChangeTodoCompleted={this.onChangeTodoCompleted}
+            onDelete={this.onDelete}
+            onSortEnd={this.changeTodos} />
+
+          <ListGroup.Item>
+            <AddTodo onAddTodo={this.onAddTodo} />
+          </ListGroup.Item>
+
+          <ListGroup.Item>
+            <TodoSettings
+              showCompleted={this.state.showCompleted}
+              onChangeShowCompleted={this.onChangeShowCompleted}
+              onRefresh={this.refreshTodos}
+            />
+          </ListGroup.Item>
+        </>
+      );
+    }
+
+    return (
+      <div className="App">
+        <header className="App-header">{todoList}</header>
+      </div>
+    );
+  }
+}
+
+export default App;

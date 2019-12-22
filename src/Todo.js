@@ -28,7 +28,7 @@ class Todo extends React.Component {
     return (
       <ListGroup.Item style={{ display: "flex" }}>
         <Button variant={btnVariant} style={{ width: "100%" }} onClick={this.handleTodoClick} onFocus={this.handleFocus}>
-          {this.props.todo.title}
+          {`${this.props.todo.title} (${this.props.todo.order})`}
         </Button>
         {/* <Form.Control type="text" placeholder="Изменить..." defaultValue={this.props.todo.title}/> */}
         {/* <Button style={{ marginLeft: "10px" }}>

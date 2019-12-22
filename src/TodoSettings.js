@@ -4,8 +4,6 @@ import Button from "react-bootstrap/Button";
 import { Icon } from "react-icons-kit";
 import { refresh } from "react-icons-kit/fa/refresh";
 
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-
 class TodoSettings extends React.Component {
   render() {
     let btnVariant;
