@@ -14,7 +14,6 @@ class TodoList extends React.Component {
         this.visibleTodos = null;
     }
 
-
     sortTodos = todos => {
         let sortedTodos = todos.slice();
         sortedTodos.sort((a, b) => (a.order > b.order ? 1 : -1));
@@ -22,11 +21,21 @@ class TodoList extends React.Component {
     }
 
     onSortEnd = ({oldIndex, newIndex}) => {
-        const oldTodo = this.visibleTodos[oldIndex];
-        const newTodo = this.visibleTodos[newIndex];
-        this.props.onSortEnd(oldTodo.id, newTodo.id);
-    }
+        let newVisibleTodos = this.visibleTodos.slice();
 
+        let tempTodo = newVisibleTodos[oldIndex];
+        newVisibleTodos[oldIndex] = newVisibleTodos[newIndex];
+        newVisibleTodos[newIndex] = tempTodo;
+
+        let orders = newVisibleTodos.map(item => item.order);
+        orders.sort((a,b) => a>b ? 1 : -1)
+
+        for (let i=0; i<newVisibleTodos.length; i++) {
+            newVisibleTodos[i].order = orders[i];
+        }
+
+        this.props.onSortEnd(newVisibleTodos);
+    }
 
     render() {
         this.sortedTodos = this.sortTodos(this.props.todos);

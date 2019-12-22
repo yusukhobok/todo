@@ -212,24 +212,17 @@ class App extends React.Component {
     }
   };
 
-  changeTodos = (id1, id2) => {
-
-    const ind1 = this.state.todos.findIndex(item => item.id == id1);
-    const order1 = this.state.todos[ind1].order;
-
-    const ind2 = this.state.todos.findIndex(item => item.id == id2);
-    const order2 = this.state.todos[ind2].order;
-
+  changeTodos = (newVisibleTodos) => {
     this.setState(prevState => {
       return {
         ...prevState,
         todos: prevState.todos.map(item => {
-          if (item.id === id1) 
-            return {...item, order: order2};
-          else if (item.id == id2)
-            return {...item, order: order1};
-          else 
-            return item;
+          const newTodo = newVisibleTodos.find(item2 => item2.id === item.id)
+          if (newTodo === undefined)
+            return item
+          else
+            return { ...item, order: newTodo.order };
+
         })
       };
     })
