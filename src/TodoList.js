@@ -1,6 +1,6 @@
 import React from "react";
 
-import { SortableContainer, SortableElement, sortableHandle } from 'react-sortable-hoc';
+import { SortableContainer, SortableElement } from 'react-sortable-hoc';
 
 import Todo from "./Todo";
 
@@ -20,21 +20,40 @@ class TodoList extends React.Component {
         return sortedTodos;
     }
 
-    onSortEnd = ({oldIndex, newIndex}) => {
-        let newVisibleTodos = this.visibleTodos.slice();
+    onSortEnd = ({ oldIndex, newIndex }) => {
+        if (oldIndex === newIndex)
+            return
+        // console.log("onSortEnd");
+        // console.log(this.visibleTodos);
+        // console.log(oldIndex, newIndex);
+        const todo = this.visibleTodos[oldIndex];
 
-        let tempTodo = newVisibleTodos[oldIndex];
-        newVisibleTodos[oldIndex] = newVisibleTodos[newIndex];
-        newVisibleTodos[newIndex] = tempTodo;
-
-        let orders = newVisibleTodos.map(item => item.order);
-        orders.sort((a,b) => a>b ? 1 : -1)
-
-        for (let i=0; i<newVisibleTodos.length; i++) {
-            newVisibleTodos[i].order = orders[i];
+        let newVisibleTodos1 = this.visibleTodos.slice();
+        newVisibleTodos1.splice(oldIndex, 1);
+        // console.log(newVisibleTodos1);
+        
+        let index2;
+        if (newIndex < oldIndex) {
+            index2 = newIndex;
         }
+        else {
+            index2 = newIndex;
+        }
+        let newVisibleTodos2 = newVisibleTodos1.slice();
+        newVisibleTodos2.splice(index2, 0, todo);
+        // console.log(newVisibleTodos2)
 
-        this.props.onSortEnd(newVisibleTodos);
+        let sortedNewVisibleTodos = newVisibleTodos2.slice()
+        let orders = newVisibleTodos2.map(item => item.order);
+        orders.sort((a, b) => a > b ? 1 : -1)
+        // console.log("orders", orders)
+
+        for (let i = 0; i < sortedNewVisibleTodos.length; i++) {
+            sortedNewVisibleTodos[i].order = orders[i];
+        }
+        // console.log("onsortEnd_finish", sortedNewVisibleTodos)
+
+        this.props.onSortEnd(sortedNewVisibleTodos);
     }
 
     render() {
@@ -42,39 +61,52 @@ class TodoList extends React.Component {
         this.visibleTodos = this.sortedTodos.filter(item => {
             return (this.props.showCompleted || !item.isCompleted)
         })
+        // console.log("render", this.visibleTodos)
 
-        const DragHandle = sortableHandle(() => <span>::</span>);
+        if (this.props.draggable) {
+            const SortableItem = SortableElement(({ value }) =>
+                // <div style={{ display: "flex" }}>
+                <div>
+                    <Todo
+                        key={value.id}
+                        todo={value}
+                        showCompleted={this.props.showCompleted}
+                        onChangeTodoCompleted={this.props.onChangeTodoCompleted}
+                        onDelete={this.props.onDelete}
+                        width="80%"
+                    />
+                </div>
+            );
 
-        const SortableItem = SortableElement(({ value }) =>
-            // <div style={{ display: "flex" }}>
-            <div>
-                {/* <DragHandle /> */}
-            <Todo
+
+            const SortableList = SortableContainer(({ items }) => {
+                return (
+                    <div>
+                        {items.map((value, index) => (
+                            <SortableItem key={value.id} index={index} value={value} />
+                        ))}
+                    </div>
+                )
+            });
+
+            return (
+                <SortableList items={this.visibleTodos} onSortEnd={this.onSortEnd} />
+            )
+        }
+        else {
+            return this.visibleTodos.map((value, index) => {
+                return (
+                <Todo
                 key={value.id}
                 todo={value}
                 showCompleted={this.props.showCompleted}
                 onChangeTodoCompleted={this.props.onChangeTodoCompleted}
                 onDelete={this.props.onDelete}
-            />
-            </div>
-        );
-
-
-        const SortableList = SortableContainer(({ items }) => {
-            return (
-                <div>
-                    {items.map((value, index) => (
-                        <SortableItem key={value.id} index={index} value={value} />
-                    ))}
-                </div>
-            )
-        });
-
-
-
-        return (
-            <SortableList items={this.visibleTodos} onSortEnd={this.onSortEnd} />
-        )
+                width="100%"
+                />    
+                )            
+            })
+        }
     }
 }
 

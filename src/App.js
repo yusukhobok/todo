@@ -22,6 +22,7 @@ class App extends React.Component {
       isError: false,
       errorMessage: "",
       showCompleted: false,
+      draggable: false,
       todos: []
     };
   }
@@ -30,8 +31,6 @@ class App extends React.Component {
   componentDidMount() {
     this.refreshTodos();
   }
-
-
 
 
   removeOldTodos = todosFromAPI => {
@@ -67,7 +66,13 @@ class App extends React.Component {
   getTodosFromAPI = async () => {
     try {
       const responce = await axios.get(API_URL);
-      const todosFromAPI = responce.data.slice();
+      let todosFromAPI = responce.data.slice();
+      // todosFromAPI = todosFromAPI.map((item) => {
+      //   return {
+      //     ...item,
+      //     order: item.id
+      //   }
+      // })
       return todosFromAPI;
     } catch (error) {
       throw new Error("Ошибка доступа к данным");
@@ -138,7 +143,8 @@ class App extends React.Component {
     const newTodo = {
       id: todo.id,
       title: todo.title,
-      isCompleted: !todo.isCompleted
+      isCompleted: !todo.isCompleted,
+      order: todo.order
     };
 
     this.setState(prevState => {
@@ -179,6 +185,15 @@ class App extends React.Component {
       };
     });
   };
+
+  onChangeDraggable = () => {
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        draggable: !prevState.draggable
+      }
+    })
+  }
 
   onAddTodo = async (newTitle) => {
     const orders = this.state.todos.map(item => item.order)
@@ -238,9 +253,20 @@ class App extends React.Component {
     } else {
       todoList = (
         <>
+          <ListGroup.Item>
+            <TodoSettings
+              showCompleted={this.state.showCompleted}
+              draggable={this.state.draggable}
+              onChangeShowCompleted={this.onChangeShowCompleted}
+              onChangeDraggable={this.onChangeDraggable}
+              onRefresh={this.refreshTodos}
+            />
+          </ListGroup.Item>
+
           <TodoList
             todos={this.state.todos}
             showCompleted={this.state.showCompleted}
+            draggable={this.state.draggable}
             onChangeTodoCompleted={this.onChangeTodoCompleted}
             onDelete={this.onDelete}
             onSortEnd={this.changeTodos} />
@@ -249,13 +275,7 @@ class App extends React.Component {
             <AddTodo onAddTodo={this.onAddTodo} />
           </ListGroup.Item>
 
-          <ListGroup.Item>
-            <TodoSettings
-              showCompleted={this.state.showCompleted}
-              onChangeShowCompleted={this.onChangeShowCompleted}
-              onRefresh={this.refreshTodos}
-            />
-          </ListGroup.Item>
+
         </>
       );
     }

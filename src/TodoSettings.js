@@ -6,17 +6,25 @@ import { refresh } from "react-icons-kit/fa/refresh";
 
 class TodoSettings extends React.Component {
   render() {
-    let btnVariant;
-    if (this.props.showCompleted) btnVariant = "outline-primary"
-    else btnVariant = "outline-secondary";
+    let btnVariantShowCompleted, btnVariantDraggeble;
+    if (this.props.showCompleted) btnVariantShowCompleted = "outline-primary"
+    else btnVariantShowCompleted = "outline-secondary";
+    if (this.props.draggable) btnVariantDraggeble = "outline-primary"
+    else btnVariantDraggeble = "outline-secondary";
 
     return (
-      <div style={{ display: "flex" }}>
+      <div style={{ display: "flex"}}>
         <Button
-          variant={btnVariant}
+          variant={btnVariantShowCompleted}
           style={{ width: "100%" }}
           onClick={this.props.onChangeShowCompleted}>
-          Показывать выполненные
+          Выполненные
+        </Button>
+        <Button
+          variant={btnVariantDraggeble}
+          style={{ width: "100%" }}
+          onClick={this.props.onChangeDraggable}>
+          Передвигать
         </Button>
         <Button style={{ marginLeft: "10px" }} onClick={this.props.onRefresh}>
           <Icon icon={refresh} />
