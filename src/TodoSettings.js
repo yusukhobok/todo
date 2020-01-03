@@ -20,7 +20,7 @@ class TodoSettings extends React.Component {
     const categoriesList = this.props.categories.map((value, index) => {
       return (
         <option key={value.id} value={value.id}>
-          {`${value.catTitle} (${value.id})`}
+          {`${value.catTitle}`}
         </option>
       )
     })
