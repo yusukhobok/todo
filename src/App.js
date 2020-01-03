@@ -12,6 +12,7 @@ import TodoMessage from "./TodoMessage";
 import TodoList from "./TodoList";
 
 const API_URL = "https://boiling-woodland-05459.herokuapp.com/api/";
+const API_URL_CATEGORIES = "https://boiling-woodland-05459.herokuapp.com/categories/";
 
 
 class App extends React.Component {
@@ -23,6 +24,8 @@ class App extends React.Component {
       errorMessage: "",
       showCompleted: false,
       draggable: false,
+      currentCategory: 1,
+      categories: [],
       todos: []
     };
   }
@@ -30,9 +33,11 @@ class App extends React.Component {
 
   componentDidMount() {
     this.refreshTodos();
+    this.getCategoriesFromAPI();
   }
 
 
+  //Удаление тех дел, которых уже нет на сервере
   removeOldTodos = todosFromAPI => {
     const filteredTodos = this.state.todos.filter(item => {
       const id = item.id;
@@ -48,6 +53,7 @@ class App extends React.Component {
   }
 
 
+  //Добавление тех дел, которые появились на сервере
   addNewTodos = todosFromAPI => {
     const filteredTodosFromAPI = todosFromAPI.filter(item => {
       const id = item.id;
@@ -63,6 +69,7 @@ class App extends React.Component {
   }
 
 
+  //чтение списка дел с сервера
   getTodosFromAPI = async () => {
     try {
       const responce = await axios.get(API_URL);
@@ -80,6 +87,24 @@ class App extends React.Component {
   }
 
 
+  //чтение списка категорий с сервера
+  getCategoriesFromAPI = async () => {
+    try {
+      const responce = await axios.get(API_URL_CATEGORIES);
+      const categoriesFromAPI = responce.data.slice();
+      this.setState(prevState => {
+        return {
+          ...prevState,
+          "categories": categoriesFromAPI
+        }
+      })
+    } catch (error) {
+      throw new Error("Ошибка доступа к данным категорий");
+    }
+  }
+
+
+  //обновление списка дел (на сервере)
   updateTodosToAPI = async () => {
     if (this.state.todos.length === 0)
       return
@@ -144,7 +169,8 @@ class App extends React.Component {
       id: todo.id,
       title: todo.title,
       isCompleted: !todo.isCompleted,
-      order: todo.order
+      order: todo.order,
+      category: todo.category
     };
 
     this.setState(prevState => {
@@ -158,12 +184,14 @@ class App extends React.Component {
     });
   };
 
+
+  //удаление дела
   onDelete = async (todo) => {
     this.setState((prevState) => {
       return { ...prevState, loading: true }
     })
     try {
-      await axios.delete(API_URL + todo.id);
+      await axios.delete(API_URL + todo.id + "/");
       this.setState(prevState => {
         return {
           ...prevState,
@@ -177,6 +205,7 @@ class App extends React.Component {
     }
   };
 
+
   onChangeShowCompleted = () => {
     this.setState(prevState => {
       return {
@@ -185,6 +214,7 @@ class App extends React.Component {
       };
     });
   };
+
 
   onChangeDraggable = () => {
     this.setState(prevState => {
@@ -195,6 +225,18 @@ class App extends React.Component {
     })
   }
 
+
+  onChangeCurrentCategory = (newCurrentCategory) => {
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        currentCategory: newCurrentCategory
+      }
+    });
+  }
+
+
+  //добаление нового дела
   onAddTodo = async (newTitle) => {
     const orders = this.state.todos.map(item => item.order)
     const maxOrder = Math.max(...orders);
@@ -202,7 +244,8 @@ class App extends React.Component {
     const newTodo = {
       title: newTitle,
       isCompleted: false,
-      order: maxOrder + 1
+      order: maxOrder + 1,
+      category: this.state.currentCategory
     };
 
     this.setState((prevState) => {
@@ -227,6 +270,7 @@ class App extends React.Component {
     }
   };
 
+
   changeTodos = (newVisibleTodos) => {
     this.setState(prevState => {
       return {
@@ -242,6 +286,7 @@ class App extends React.Component {
       };
     })
   }
+
 
   render() {
     let todoList;
@@ -260,11 +305,15 @@ class App extends React.Component {
               onChangeShowCompleted={this.onChangeShowCompleted}
               onChangeDraggable={this.onChangeDraggable}
               onRefresh={this.refreshTodos}
+              categories={this.state.categories}
+              currentCategory={this.state.currentCategory}
+              onChangeCurrentCategory={this.onChangeCurrentCategory}
             />
           </ListGroup.Item>
 
           <TodoList
             todos={this.state.todos}
+            currentCategory={this.state.currentCategory}
             showCompleted={this.state.showCompleted}
             draggable={this.state.draggable}
             onChangeTodoCompleted={this.onChangeTodoCompleted}

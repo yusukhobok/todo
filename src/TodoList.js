@@ -10,6 +10,7 @@ class TodoList extends React.Component {
 
     constructor() {
         super();
+        this.TodosOfCategory = null;
         this.sortedTodos = null;
         this.visibleTodos = null;
     }
@@ -32,15 +33,8 @@ class TodoList extends React.Component {
         newVisibleTodos1.splice(oldIndex, 1);
         // console.log(newVisibleTodos1);
         
-        let index2;
-        if (newIndex < oldIndex) {
-            index2 = newIndex;
-        }
-        else {
-            index2 = newIndex;
-        }
         let newVisibleTodos2 = newVisibleTodos1.slice();
-        newVisibleTodos2.splice(index2, 0, todo);
+        newVisibleTodos2.splice(newIndex, 0, todo);
         // console.log(newVisibleTodos2)
 
         let sortedNewVisibleTodos = newVisibleTodos2.slice()
@@ -57,11 +51,13 @@ class TodoList extends React.Component {
     }
 
     render() {
-        this.sortedTodos = this.sortTodos(this.props.todos);
+        this.TodosOfCategory = this.props.todos.filter(item => {
+            return item.category == this.props.currentCategory;
+        })
+        this.sortedTodos = this.sortTodos(this.TodosOfCategory);
         this.visibleTodos = this.sortedTodos.filter(item => {
             return (this.props.showCompleted || !item.isCompleted)
         })
-        // console.log("render", this.visibleTodos)
 
         if (this.props.draggable) {
             const SortableItem = SortableElement(({ value }) =>
