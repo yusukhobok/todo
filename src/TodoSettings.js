@@ -4,6 +4,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import { Icon } from "react-icons-kit";
 import { refresh } from "react-icons-kit/fa/refresh";
+import {signOut} from 'react-icons-kit/fa/signOut';
 
 class TodoSettings extends React.Component {
   handleChangeCategory = (event) => {
@@ -32,18 +33,24 @@ class TodoSettings extends React.Component {
         </Form.Control>
         <Button
           variant={btnVariantShowCompleted}
-          style={{ width: "100%" }}
+          style={{ width: "100%", marginLeft: "10px" }}
           onClick={this.props.onChangeShowCompleted}>
           Выполненные
         </Button>
         <Button
           variant={btnVariantDraggeble}
-          style={{ width: "100%" }}
+          style={{ width: "100%", marginLeft: "10px" }}
           onClick={this.props.onChangeDraggable}>
           Передвигать
         </Button>
         <Button style={{ marginLeft: "10px" }} onClick={this.props.onRefresh}>
           <Icon icon={refresh} />
+        </Button>
+        <Button
+          variant="primary"
+          style={{ marginLeft: "10px"  }}
+          onClick={this.props.logout}>
+          <Icon icon={signOut} />
         </Button>
       </div>
     );

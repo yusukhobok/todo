@@ -52,7 +52,7 @@ class TodoList extends React.Component {
 
     render() {
         this.TodosOfCategory = this.props.todos.filter(item => {
-            return item.category == this.props.currentCategory;
+            return +item.category === +this.props.currentCategory;
         })
         this.sortedTodos = this.sortTodos(this.TodosOfCategory);
         this.visibleTodos = this.sortedTodos.filter(item => {
