@@ -43,6 +43,11 @@ class TodoSettings extends React.Component {
           onClick={this.props.onChangeDraggable}>
           Передвигать
         </Button>
+        <Button
+          style={{ width: "100%", marginLeft: "10px" }}
+          onClick={this.props.onSortTodosInAlphabeticalOrder}>
+          Отсортировать
+        </Button>
         <Button style={{ marginLeft: "10px" }} onClick={this.props.onRefresh}>
           <Icon icon={refresh} />
         </Button>

@@ -365,6 +365,29 @@ class App extends React.Component {
   }
 
 
+  sortTodosInAlphabeticalOrder = () => {
+    let newTodos = this.state.todos.slice();
+    
+    newTodos.sort((a,b) => {
+      if (a.title.toUpperCase() > b.title.toUpperCase()) return 1;
+      if (a.title.toUpperCase() == b.title.toUpperCase()) return 0;
+      if (a.title.toUpperCase() < b.title.toUpperCase()) return -1;
+    })
+
+    newTodos = newTodos.map((item, index, array) => {
+      return {...item, order: index};
+    })
+
+    this.setState(prevState => {
+      return {
+        ...prevState,
+        todos: newTodos,
+        loading: false
+      };
+    });
+  }
+
+
   render() {
     if (this.state.token === null) {
       return <LoginForm loginSubmit={this.login} wrongLoginOrPassword={this.state.wrongLoginOrPassword} />
@@ -389,6 +412,7 @@ class App extends React.Component {
                 categories={this.state.categories}
                 currentCategory={this.state.currentCategory}
                 onChangeCurrentCategory={this.onChangeCurrentCategory}
+                onSortTodosInAlphabeticalOrder={this.sortTodosInAlphabeticalOrder}
                 logout={this.logout}
               />
             </ListGroup.Item>
