@@ -13,9 +13,9 @@ import TodoList from "./TodoList";
 import LoginForm from "./LoginForm";
 
 const API_URL = "https://boiling-woodland-05459.herokuapp.com/api/";
-const API_URL_CATEGORIES = "https://boiling-woodland-05459.herokuapp.com/categories/";
+const API_URL_CATEGORIES =
+  "https://boiling-woodland-05459.herokuapp.com/categories/";
 const API_URL_AUTH = "https://boiling-woodland-05459.herokuapp.com/auth/token/";
-
 
 class App extends React.Component {
   constructor() {
@@ -30,10 +30,9 @@ class App extends React.Component {
       draggable: false,
       currentCategory: 1,
       categories: [],
-      todos: []
+      todos: [],
     };
   }
-
 
   componentDidMount() {
     if (this.state.token !== null) {
@@ -45,107 +44,97 @@ class App extends React.Component {
     if (prevState.token !== this.state.token) {
       if (this.state.token !== null) {
         this.refreshTodos(true);
-      }
-      else {
-        this.setState(prevState => {
+      } else {
+        this.setState((prevState) => {
           return {
             ...prevState,
             categories: [],
-            todos: []
-          }
+            todos: [],
+          };
         });
       }
     }
   }
 
-
   setToken = (token) => {
-    if (token === null)
-      localStorage.removeItem("token");
-    else
-      localStorage.setItem("token", token);
-    this.setState(prevState => {
+    if (token === null) localStorage.removeItem("token");
+    else localStorage.setItem("token", token);
+    this.setState((prevState) => {
       return {
         ...prevState,
         token: token,
-        wrongLoginOrPassword: false
-      }
+        wrongLoginOrPassword: false,
+      };
     });
-  }
-
+  };
 
   getTokenInfo = () => {
-    return { headers: { Authorization: 'Token ' + this.state.token } }
-  }
-
+    return { headers: { Authorization: "Token " + this.state.token } };
+  };
 
   login = async (username, password) => {
     try {
       const data = { username, password };
       const res = await axios.post(API_URL_AUTH + "login/", data);
       const token = res.data["auth_token"];
-      this.setToken(token)
+      this.setToken(token);
 
       this.refreshTodos(true);
-
     } catch (error) {
-      this.setState(prevState => {
+      this.setState((prevState) => {
         return {
           ...prevState,
-          wrongLoginOrPassword: true
-        }
-      })
+          wrongLoginOrPassword: true,
+        };
+      });
     }
-  }
+  };
 
   logout = async () => {
     try {
       await axios.post(API_URL_AUTH + "logout/", null, this.getTokenInfo());
       this.setToken(null);
-
     } catch (error) {
       console.log(error.message);
     }
-  }
-
+  };
 
   //Удаление тех дел, которых уже нет на сервере
-  removeOldTodos = todosFromAPI => {
-    const filteredTodos = this.state.todos.filter(item => {
+  removeOldTodos = (todosFromAPI) => {
+    const filteredTodos = this.state.todos.filter((item) => {
       const id = item.id;
-      const index = todosFromAPI.findIndex(item => item.id === id);
+      const index = todosFromAPI.findIndex((item) => item.id === id);
       return index !== -1;
-    })
-    this.setState(prevState => {
+    });
+    this.setState((prevState) => {
       return {
         ...prevState,
-        todos: filteredTodos
-      }
-    })
-  }
-
+        todos: filteredTodos,
+      };
+    });
+  };
 
   //Добавление тех дел, которые появились на сервере
-  addNewTodos = todosFromAPI => {
-    const filteredTodosFromAPI = todosFromAPI.filter(item => {
+  addNewTodos = (todosFromAPI) => {
+    const filteredTodosFromAPI = todosFromAPI.filter((item) => {
       const id = item.id;
-      const index = this.state.todos.findIndex(item => item.id === id);
+      const index = this.state.todos.findIndex((item) => item.id === id);
       return index === -1;
-    })
-    this.setState(prevState => {
+    });
+    this.setState((prevState) => {
       return {
         ...prevState,
-        todos: prevState.todos.concat(filteredTodosFromAPI)
-      }
-    })
-  }
-
+        todos: prevState.todos.concat(filteredTodosFromAPI),
+      };
+    });
+  };
 
   //чтение списка дел с сервера
   getTodosFromAPI = async () => {
     try {
       const responce = await axios.get(API_URL, this.getTokenInfo());
       let todosFromAPI = responce.data.slice();
+
       // todosFromAPI = todosFromAPI.map((item) => {
       //   return {
       //     ...item,
@@ -156,75 +145,80 @@ class App extends React.Component {
     } catch (error) {
       throw new Error("Ошибка доступа к данным");
     }
-  }
-
+  };
 
   //чтение списка категорий с сервера
   getCategoriesFromAPI = async () => {
     try {
       const responce = await axios.get(API_URL_CATEGORIES, this.getTokenInfo());
       const categoriesFromAPI = responce.data.slice();
-      this.setState(prevState => {
+      this.setState((prevState) => {
         return {
           ...prevState,
-          "categories": categoriesFromAPI
-        }
-      })
+          categories: categoriesFromAPI,
+        };
+      });
     } catch (error) {
       throw new Error("Ошибка доступа к данным категорий");
     }
-  }
-
+  };
 
   //обновление списка дел (на сервере)
-  updateTodosToAPI = async () => {
-    if (this.state.todos.length === 0)
-      return
+  updateTodosToAPI = async (currentTodosFromAPI) => {
+    if (this.state.todos.length === 0) return;
     try {
+      // проверить, что в currentTodoFromAPI даты ранее, чем у нас
+      console.log(currentTodosFromAPI);
+      console.log(this.state.todos);
+
+      // const newersFromAPI = currentTodosFromAPI.filter((item) => {
+      //   const id = item.id;
+      //   const index = this.state.todos.findIndex((item) => item.id === id);
+      //   return (index === -1) || (this.state) ;
+      // });
+
       await axios.put(API_URL, this.state.todos, this.getTokenInfo());
     } catch (error) {
       throw new Error("Ошибка обновления данных");
     }
-  }
-
+  };
 
   refreshTodos = async (isGetCategoriesFromAPI = false) => {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
-        loading: true
-      }
-    })
+        loading: true,
+      };
+    });
 
     try {
       const todosFromAPI = await this.getTodosFromAPI();
       this.removeOldTodos(todosFromAPI);
       try {
-        await this.updateTodosToAPI();
+        await this.updateTodosToAPI(todosFromAPI);
         this.addNewTodos(todosFromAPI);
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return {
             ...prevState,
             loading: false,
             isError: false,
             errorMessage: "",
-          }
+          };
         });
       } catch (error) {
         console.log(error.message);
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return {
             ...prevState,
             loading: false,
             isError: false,
             errorMessage: "",
             todos: todosFromAPI,
-          }
+          };
         });
       }
 
-      if (isGetCategoriesFromAPI)
-        this.getCategoriesFromAPI();
+      if (isGetCategoriesFromAPI) this.getCategoriesFromAPI();
     } catch (error) {
       console.log(error.message);
       this.setToken(null);
@@ -240,96 +234,94 @@ class App extends React.Component {
     }
   };
 
-
-  onChangeTodoCompleted = todo => {
+  onChangeTodoCompleted = (todo) => {
+    let now = new Date();
     const newTodo = {
       id: todo.id,
       title: todo.title,
       isCompleted: !todo.isCompleted,
+      lastChangeDateTime: now.toISOString(),
       order: todo.order,
-      category: todo.category
+      category: todo.category,
     };
+    console.log(newTodo);
 
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
-        todos: prevState.todos.map(item => {
+        todos: prevState.todos.map((item) => {
           if (item.id === newTodo.id) return newTodo;
           else return item;
-        })
+        }),
       };
     });
   };
-
 
   //удаление дела
   onDelete = async (todo) => {
     this.setState((prevState) => {
-      return { ...prevState, loading: true }
-    })
+      return { ...prevState, loading: true };
+    });
     try {
       await axios.delete(API_URL + todo.id + "/", this.getTokenInfo());
-      this.setState(prevState => {
+      this.setState((prevState) => {
         return {
           ...prevState,
           loading: false,
-          todos: prevState.todos.filter(item => item.id !== todo.id)
+          todos: prevState.todos.filter((item) => item.id !== todo.id),
         };
       });
-    }
-    catch (error) {
+    } catch (error) {
       console.log(error.message);
     }
   };
 
-
   onChangeShowCompleted = () => {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
-        showCompleted: !prevState.showCompleted
+        showCompleted: !prevState.showCompleted,
       };
     });
   };
 
-
   onChangeDraggable = () => {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
-        draggable: !prevState.draggable
-      }
-    })
-  }
-
+        draggable: !prevState.draggable,
+      };
+    });
+  };
 
   onChangeCurrentCategory = (newCurrentCategory) => {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
-        currentCategory: newCurrentCategory
-      }
+        currentCategory: newCurrentCategory,
+      };
     });
-  }
-
+  };
 
   //добаление нового дела
   onAddTodo = async (newTitle) => {
-    const found = this.state.todos.find((item) => item.title.toUpperCase() === newTitle.toUpperCase());
+    const found = this.state.todos.find(
+      (item) => item.title.toUpperCase() === newTitle.toUpperCase()
+    );
     if (found === undefined || found.category !== this.state.currentCategory) {
-      const orders = this.state.todos.map(item => item.order)
+      const orders = this.state.todos.map((item) => item.order);
       const maxOrder = Math.max(...orders);
 
       const newTodo = {
         title: newTitle,
         isCompleted: false,
         order: maxOrder + 1,
-        category: this.state.currentCategory
+        category: this.state.currentCategory,
       };
 
       this.setState((prevState) => {
-        return { ...prevState, loading: true }
-      })
+        return { ...prevState, loading: true };
+      });
 
       try {
         const res = await axios.post(API_URL, newTodo, this.getTokenInfo());
@@ -337,18 +329,21 @@ class App extends React.Component {
 
         let newTodos = this.state.todos.slice();
         newTodos.push(newTodoFromAPI);
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return {
             ...prevState,
             todos: newTodos,
-            loading: false
+            loading: false,
           };
         });
       } catch (error) {
         console.log(error.message);
       }
-    }
-    else if (found !== undefined && found.category === this.state.currentCategory && found.isCompleted) {
+    } else if (
+      found !== undefined &&
+      found.category === this.state.currentCategory &&
+      found.isCompleted
+    ) {
       const newTodo = {
         id: found.id,
         title: found.title,
@@ -356,7 +351,7 @@ class App extends React.Component {
         order: found.order,
         category: found.category,
       };
-  
+
       this.setState((prevState) => {
         return {
           ...prevState,
@@ -369,58 +364,57 @@ class App extends React.Component {
     }
   };
 
-
   changeTodos = (newVisibleTodos) => {
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
-        todos: prevState.todos.map(item => {
-          const newTodo = newVisibleTodos.find(item2 => item2.id === item.id)
-          if (newTodo === undefined)
-            return item
-          else
-            return { ...item, order: newTodo.order };
-
-        })
+        todos: prevState.todos.map((item) => {
+          const newTodo = newVisibleTodos.find((item2) => item2.id === item.id);
+          if (newTodo === undefined) return item;
+          else return { ...item, order: newTodo.order };
+        }),
       };
-    })
-  }
-
+    });
+  };
 
   sortTodosInAlphabeticalOrder = () => {
     let newTodos = this.state.todos.slice();
-    
-    newTodos.sort((a,b) => {
+
+    newTodos.sort((a, b) => {
       if (a.title.toUpperCase() > b.title.toUpperCase()) return 1;
-      if (a.title.toUpperCase() == b.title.toUpperCase()) return 0;
+      if (a.title.toUpperCase() === b.title.toUpperCase()) return 0;
       if (a.title.toUpperCase() < b.title.toUpperCase()) return -1;
-    })
+    });
 
     newTodos = newTodos.map((item, index, array) => {
-      return {...item, order: index};
-    })
+      return { ...item, order: index };
+    });
 
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         ...prevState,
         todos: newTodos,
-        loading: false
+        loading: false,
       };
     });
-  }
-
+  };
 
   render() {
     if (this.state.token === null) {
-      return <LoginForm loginSubmit={this.login} wrongLoginOrPassword={this.state.wrongLoginOrPassword} />
-    }
-    else {
+      return (
+        <LoginForm
+          loginSubmit={this.login}
+          wrongLoginOrPassword={this.state.wrongLoginOrPassword}
+        />
+      );
+    } else {
       let todoList;
       if (this.state.isError) {
-        todoList = <TodoMessage msg={this.state.errorMessage} variant="danger" />
-      }
-      else if (this.state.loading) {
-        todoList = <TodoMessage msg="Загрузка..." variant="info" />
+        todoList = (
+          <TodoMessage msg={this.state.errorMessage} variant="danger" />
+        );
+      } else if (this.state.loading) {
+        todoList = <TodoMessage msg="Загрузка..." variant="info" />;
       } else {
         todoList = (
           <>
@@ -434,7 +428,9 @@ class App extends React.Component {
                 categories={this.state.categories}
                 currentCategory={this.state.currentCategory}
                 onChangeCurrentCategory={this.onChangeCurrentCategory}
-                onSortTodosInAlphabeticalOrder={this.sortTodosInAlphabeticalOrder}
+                onSortTodosInAlphabeticalOrder={
+                  this.sortTodosInAlphabeticalOrder
+                }
                 logout={this.logout}
               />
             </ListGroup.Item>
@@ -446,13 +442,12 @@ class App extends React.Component {
               draggable={this.state.draggable}
               onChangeTodoCompleted={this.onChangeTodoCompleted}
               onDelete={this.onDelete}
-              onSortEnd={this.changeTodos} />
+              onSortEnd={this.changeTodos}
+            />
 
             <ListGroup.Item>
               <AddTodo onAddTodo={this.onAddTodo} />
             </ListGroup.Item>
-
-
           </>
         );
       }

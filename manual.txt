@@ -9,3 +9,6 @@ npm run deploy
 
 Сайт доступен по адресу:
 https://yus27.github.io/todo/
+
+Логин: khvyu
+Пароль: 32167
