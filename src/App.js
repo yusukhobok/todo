@@ -174,8 +174,6 @@ class App extends React.Component {
     }
   };
 
-  compareDates = (date1, date2) => {};
-
   //синхронизация списка дел (между текущим состоянием и тем, что было на сервере)
   updateTodosToAPI = async (currentTodosFromAPI) => {
     if (this.state.todos.length === 0) return;
