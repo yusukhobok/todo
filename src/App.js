@@ -32,6 +32,9 @@ class App extends React.Component {
       categories: [],
       todos: [],
     };
+
+    const TIMER_DELAY = 1 * 60 * 1000;
+    this.timer = setInterval(this.handleTimer, TIMER_DELAY);
   }
 
   componentDidMount() {
@@ -55,6 +58,14 @@ class App extends React.Component {
       }
     }
   }
+
+  handleTimer = () => {
+    if (this.state.token !== null) {
+      if (!this.state.loading) {
+        this.refreshTodos(false);
+      }
+    }
+  };
 
   setToken = (token) => {
     if (token === null) localStorage.removeItem("token");
@@ -163,21 +174,49 @@ class App extends React.Component {
     }
   };
 
-  //обновление списка дел (на сервере)
+  compareDates = (date1, date2) => {};
+
+  //синхронизация списка дел (между текущим состоянием и тем, что было на сервере)
   updateTodosToAPI = async (currentTodosFromAPI) => {
     if (this.state.todos.length === 0) return;
     try {
       // проверить, что в currentTodoFromAPI даты ранее, чем у нас
-      console.log(currentTodosFromAPI);
-      console.log(this.state.todos);
+      const newersFromAPI = currentTodosFromAPI.filter((item) => {
+        const id = item.id;
+        const index = this.state.todos.findIndex((item) => item.id === id);
+        if (index === -1) return false;
+        const serverDate = Date.parse(item.lastChangeDateTime);
+        const localDate = Date.parse(
+          this.state.todos[index].lastChangeDateTime
+        );
+        // console.log(serverDate, localDate);
+        return serverDate > localDate;
+      });
+      console.log("newersFromAPI", newersFromAPI);
 
-      // const newersFromAPI = currentTodosFromAPI.filter((item) => {
-      //   const id = item.id;
-      //   const index = this.state.todos.findIndex((item) => item.id === id);
-      //   return (index === -1) || (this.state) ;
-      // });
+      const newersFromLocal = this.state.todos.filter((item) => {
+        const id = item.id;
+        const index = currentTodosFromAPI.findIndex((item) => item.id === id);
+        if (index === -1) return false;
+        const localDate = Date.parse(item.lastChangeDateTime);
+        const serverDate = Date.parse(
+          currentTodosFromAPI[index].lastChangeDateTime
+        );
+        // console.log(serverDate, localDate);
+        return localDate > serverDate;
+      });
+      console.log("newersFromLocal", newersFromLocal);
 
-      await axios.put(API_URL, this.state.todos, this.getTokenInfo());
+      if (newersFromLocal.length !== 0)
+        await axios.put(API_URL, newersFromLocal, this.getTokenInfo());
+
+      if (newersFromAPI.length !== 0)
+        this.setState((prevState) => {
+          return {
+            ...prevState,
+            todos: newersFromAPI,
+          };
+        });
     } catch (error) {
       throw new Error("Ошибка обновления данных");
     }
@@ -193,10 +232,10 @@ class App extends React.Component {
 
     try {
       const todosFromAPI = await this.getTodosFromAPI();
-      this.removeOldTodos(todosFromAPI);
+      this.removeOldTodos(todosFromAPI); //удаление дел, которых уже нет на сервере
       try {
-        await this.updateTodosToAPI(todosFromAPI);
-        this.addNewTodos(todosFromAPI);
+        await this.updateTodosToAPI(todosFromAPI); //синхронизация дел между сервером и клиентом (локально)
+        this.addNewTodos(todosFromAPI); // добавление на сервер новых дел (появившихся локально)
         this.setState((prevState) => {
           return {
             ...prevState,
@@ -235,7 +274,7 @@ class App extends React.Component {
   };
 
   onChangeTodoCompleted = (todo) => {
-    let now = new Date();
+    const now = new Date();
     const newTodo = {
       id: todo.id,
       title: todo.title,
@@ -244,7 +283,7 @@ class App extends React.Component {
       order: todo.order,
       category: todo.category,
     };
-    console.log(newTodo);
+    // console.log(newTodo);
 
     this.setState((prevState) => {
       return {
@@ -312,9 +351,11 @@ class App extends React.Component {
       const orders = this.state.todos.map((item) => item.order);
       const maxOrder = Math.max(...orders);
 
+      const now = new Date();
       const newTodo = {
         title: newTitle,
         isCompleted: false,
+        lastChangeDateTime: now.toISOString(),
         order: maxOrder + 1,
         category: this.state.currentCategory,
       };
@@ -344,13 +385,16 @@ class App extends React.Component {
       found.category === this.state.currentCategory &&
       found.isCompleted
     ) {
+      const now = new Date();
       const newTodo = {
         id: found.id,
         title: found.title,
         isCompleted: false,
+        lastChangeDateTime: now.toISOString(),
         order: found.order,
         category: found.category,
       };
+      // console.log(newTodo);
 
       this.setState((prevState) => {
         return {
@@ -384,6 +428,7 @@ class App extends React.Component {
       if (a.title.toUpperCase() > b.title.toUpperCase()) return 1;
       if (a.title.toUpperCase() === b.title.toUpperCase()) return 0;
       if (a.title.toUpperCase() < b.title.toUpperCase()) return -1;
+      return 0;
     });
 
     newTodos = newTodos.map((item, index, array) => {
