@@ -1,4 +1,4 @@
-todo-лист (клиентская часть)
+# todo-лист (клиентская часть)
 ![скриншот](https://github.com/yusukhobok/todo/blob/master/screen.png)
 
 
