@@ -1,3 +1,7 @@
+todo-лист (клиентская часть)
+![скриншот](https://github.com/yusukhobok/todo/blob/master/screen.png)
+
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
